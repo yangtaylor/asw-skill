@@ -142,6 +142,29 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 - 页眉：显示文档标题（项目名称 + 架构解决方案），字体：宋体, sz: 18（小五号=9pt）, 颜色: 黑色("000000")
 - 页脚：显示页码，居中
 
+### 子技能调用
+
+#### 应用系统与架构设计讨论助手
+
+在生成第5章 5.1 总体设计时，如果用户未提供完整的应用架构图或系统交互关系说明，加载 `resources/architecture-design-assistant.md` 子技能进行补充讨论。
+
+**触发时机**：
+- 执行到第4步"逐章内容生成"，开始生成第5章时
+- 检查是否已有系统清单、数据交换关系、架构图描述
+- 如信息不足，暂停主流程，调用子技能进行交互式讨论
+
+**讨论内容**：
+1. 识别应用系统（新建/变更/关联）
+2. 梳理系统间数据交换关系（流向、内容、方式、协议）
+3. 确认核心业务流程（1-3个关键流程的系统交互路径）
+4. 生成 Mermaid 架构图和流程图代码
+
+**输出整合**：
+- 将讨论结果的结构化数据（systems, data_exchanges, core_processes, mermaid_diagrams）整合到5.1总体设计中
+- 系统清单以表格形式呈现
+- 数据交换关系以表格或矩阵形式呈现
+- 架构图和流程图以图片形式插入（使用 ImageRun），图注格式：宋体, sz: 21, 居中
+
 ### 各章节生成规则
 
 **有内容的章节**：根据收集到的信息和材料，按照模板编写说明生成完整内容。
@@ -233,3 +256,4 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 - `resources/questionnaire.md`：分阶段信息收集问卷
 - `resources/not-applicable-guide.md`：各章节"不涉及"判断指南
 - `resources/appendix-reference.md`：附录标准参考数据（容灾等级定义、RTO/RPO指标矩阵、可用性分层模型等）
+- `resources/architecture-design-assistant.md`：应用系统与架构设计讨论助手（子技能），用于5.1总体设计前梳理系统清单、数据交换关系和生成架构/流程图

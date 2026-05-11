@@ -243,7 +243,7 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 
 #### 1. 词素表使用规则
 
-- 所有命名必须使用词素表（`references/词素表-2026-1-29.md`）中定义的标准词汇
+- 所有命名必须使用词素表（`references/词素表.md`）中定义的标准词汇
 - 中文概念优先使用"名词简称"列的英文缩写/全称
 - 词素表中的词汇分为以下三类：
   - **基础名词**：如 CODE（码）、COMPANY（公司）、SESSION（会话）等

@@ -180,6 +180,245 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 - 列出关键数据实体及其属性字段（不直接给数据库表结构设计）
 - 明确主数据归属和数据同步机制
 
+### 接口与表结构描述规范
+
+在架构解决方案文档中，除非用户特殊要求，否则：
+
+1. **不给出具体实体的字段明细**
+   - 不列出数据库表的详细字段定义（字段名、类型、长度、约束等）
+   - 不给出接口的详细请求/响应参数字段清单
+
+2. **按业务实体的含义和中文名进行描述**
+   - 数据库表设计：描述表的业务含义、对应的中文名称、包含的核心业务实体关系即可
+   - 接口设计：描述接口的功能、对应的业务操作、输入输出的业务实体中文名即可
+
+3. **示例对比**
+
+   ❌ **不应出现**（过于详细的字段级设计）：
+   ```
+   表名：t_match_schedule
+   字段：
+   - id BIGINT 主键
+   - match_code VARCHAR(32) 赛程编码
+   - match_format VARCHAR(20) 赛制格式
+   - prize_level_id BIGINT 奖级ID
+   ...
+   ```
+
+   ✅ **应该出现**（业务实体级描述）：
+   ```
+   赛程表（t_match_schedule）：存储彩票赛程信息，包含赛程编码、赛制格式、
+   关联奖级、省份信息、净投注金额等核心业务数据。
+   关联实体：奖级表、省份表
+   ```
+
+   ❌ **不应出现**（详细的接口参数字段）：
+   ```yaml
+   /api/match-schedules:
+     post:
+       requestBody:
+         properties:
+           matchCode: string
+           matchFormat: string
+           prizeLevelId: integer
+           provinceCode: string
+           netBetAmount: number
+   ```
+
+   ✅ **应该出现**（接口功能和业务实体描述）：
+   ```
+   POST /api/match-schedules
+   功能：创建赛程
+   输入：赛程信息（包含赛程编码、赛制、奖级、省份、投注金额等）
+   输出：创建的赛程实体信息
+   ```
+
+4. **例外情况**
+   - 仅当用户明确要求提供详细字段设计时，才给出字段级明细
+   - 涉及关键业务规则的核心字段（如状态枚举值），可简要说明其业务含义
+
+### 接口设计与数据库设计命名规范
+
+在进行接口设计和数据库表设计时，必须遵循以下命名规范：
+
+#### 1. 词素表使用规则
+
+- 所有命名必须使用词素表（`词素表-2026-1-29.md`）中定义的标准词汇
+- 中文概念优先使用"名词简称"列的英文缩写/全称
+- 词素表中的词汇分为以下三类：
+  - **基础名词**：如 CODE（码）、COMPANY（公司）、SESSION（会话）等
+  - **业务名词**：如 MATCH_SCHEDULE（赛程）、PRIZE_POOL（奖池）、MATCH_FORMAT（赛制）等
+  - **状态/操作名词**：如 SYNCED（已同步）、COMPLETE（完成）、TRANSFER（转移）等
+
+#### 2. 数据库命名规范（下划线命名法 snake_case）
+
+| 对象类型 | 命名规则 | 示例 |
+|----------|----------|------|
+| 表名 | 模块前缀_业务实体_后缀 | `t_match_schedule`、`t_prize_pool_info` |
+| 字段名 | 词素组合，全小写下划线分隔 | `match_code`、`prize_level_id`、`create_time` |
+| 索引名 | idx_表名_字段名 | `idx_t_match_schedule_match_code` |
+| 约束名 | pk_表名 / fk_表名_字段名 | `pk_t_match_schedule`、`fk_t_match_schedule_province_id` |
+| 序列名 | seq_表名 | `seq_t_match_schedule` |
+| 视图名 | v_业务描述 | `v_match_schedule_detail` |
+
+**数据库命名示例**：
+```sql
+-- 表名：赛程表
+CREATE TABLE t_match_schedule (
+    id              BIGINT PRIMARY KEY COMMENT '主键ID',
+    match_code      VARCHAR(32) NOT NULL COMMENT '赛程编码',
+    match_format    VARCHAR(20) COMMENT '赛制格式',
+    prize_level_id  BIGINT COMMENT '奖级ID',
+    province_code   VARCHAR(10) COMMENT '省份编码',
+    net_bet_amount  DECIMAL(18,2) COMMENT '净投注金额',
+    actual_refund   DECIMAL(18,2) COMMENT '实退金额',
+    sync_status     TINYINT DEFAULT 0 COMMENT '同步状态：0-未同步，1-已同步',
+    create_time     DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time     DATETIME ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+);
+
+-- 索引
+CREATE INDEX idx_t_match_schedule_match_code ON t_match_schedule(match_code);
+```
+
+#### 3. 前后端代码变量命名规范（小驼峰命名法 camelCase）
+
+| 对象类型 | 命名规则 | 示例 |
+|----------|----------|------|
+| 类名 | 大驼峰 PascalCase | `MatchScheduleService`、`PrizePoolController` |
+| 变量/属性名 | 小驼峰 camelCase | `matchCode`、`prizeLevelId`、`netBetAmount` |
+| 方法名 | 小驼峰 camelCase | `getMatchSchedule()`、`updatePrizePool()` |
+| 常量名 | 全大写下划线分隔 | `MAX_PRIZE_LEVEL`、`DEFAULT_SYNC_STATUS` |
+| 接口名 | 大驼峰，以 I 开头（可选） | `IMatchScheduleService` 或 `MatchScheduleService` |
+| DTO/VO 类名 | 大驼峰，后缀标识类型 | `MatchScheduleDTO`、`PrizePoolVO` |
+| 枚举名 | 大驼峰，枚举值全大写 | `SyncStatusEnum.SYNCED`、`PrizeLevelEnum.FIRST` |
+
+**代码命名示例**：
+```java
+// Java 示例
+public class MatchScheduleService {
+    private static final int MAX_PRIZE_LEVEL = 10;
+    
+    public MatchScheduleDTO getMatchScheduleByCode(String matchCode) {
+        MatchScheduleEntity entity = matchScheduleDao.findByMatchCode(matchCode);
+        Long prizeLevelId = entity.getPrizeLevelId();
+        BigDecimal netBetAmount = entity.getNetBetAmount();
+        // ...
+        return convertToDTO(entity);
+    }
+    
+    public void updateSyncStatus(String matchCode, SyncStatusEnum syncStatus) {
+        // ...
+    }
+}
+```
+
+```typescript
+// TypeScript/前端示例
+interface MatchSchedule {
+    id: number;
+    matchCode: string;
+    matchFormat: string;
+    prizeLevelId: number;
+    provinceCode: string;
+    netBetAmount: number;
+    actualRefund: number;
+    syncStatus: SyncStatus;
+    createTime: string;
+}
+
+enum SyncStatus {
+    UNSYNCED = 0,
+    SYNCED = 1
+}
+
+function getMatchScheduleDetail(matchCode: string): Promise<MatchSchedule> {
+    return api.get(`/api/match-schedule/${matchCode}`);
+}
+```
+
+#### 4. 接口设计命名规范
+
+| 对象类型 | 命名规则 | 示例 |
+|----------|----------|------|
+| URL 路径 | 全小写，中划线分隔 | `/api/match-schedules`、`/api/prize-pools/{prizePoolId}` |
+| 请求参数 | 小驼峰 | `matchCode`、`prizeLevelId` |
+| 响应字段 | 小驼峰 | `matchCode`、`netBetAmount` |
+| Query 参数 | 小驼峰 | `provinceCode`、`startTime` |
+| Header 参数 | 大驼峰中划线分隔（标准 HTTP） | `X-Request-Id`、`Content-Type` |
+
+**接口设计示例**：
+```yaml
+# OpenAPI / Swagger 示例
+paths:
+  /api/match-schedules:
+    get:
+      summary: 获取赛程列表
+      parameters:
+        - name: provinceCode
+          in: query
+          schema:
+            type: string
+        - name: matchFormat
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matchCode:
+                    type: string
+                  prizeLevelId:
+                    type: integer
+                  netBetAmount:
+                    type: number
+    
+    post:
+      summary: 创建赛程
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                matchCode:
+                  type: string
+                matchFormat:
+                  type: string
+                prizePoolId:
+                  type: integer
+```
+
+#### 5. 命名转换对照表
+
+| 中文概念 | 词素表简称 | 数据库表/字段 | 代码变量/属性 | URL 路径 |
+|----------|-----------|--------------|--------------|----------|
+| 赛程 | MATCH_SCHEDULE | match_schedule | matchSchedule | match-schedules |
+| 奖池 | PRIZE_POOL | prize_pool | prizePool | prize-pools |
+| 奖级 | PRIZE_LEVEL | prize_level | prizeLevel | prize-levels |
+| 赛制 | MATCH_FORMAT | match_format | matchFormat | match-formats |
+| 省份 | PROVINCE | province | province | provinces |
+| 净投注 | NET_BET | net_bet | netBet | net-bets |
+| 实退 | ACTUAL_REFUND | actual_refund | actualRefund | actual-refunds |
+| 已同步 | SYNCED | sync_status | syncStatus | - |
+| 编码 | CODE | code | code | - |
+| 公司 | COMPANY | company | company | companies |
+
+#### 6. 规范执行检查清单
+
+生成接口设计或数据库设计时，必须检查：
+- [ ] 所有概念是否来自词素表
+- [ ] 数据库对象是否使用下划线命名法（snake_case）
+- [ ] 代码变量是否使用小驼峰命名法（camelCase）
+- [ ] 类名是否使用大驼峰命名法（PascalCase）
+- [ ] URL 路径是否使用全小写中划线分隔
+- [ ] 常量是否使用全大写下划线分隔
+- [ ] 同一概念在不同层命名是否保持一致（仅大小写和分隔符不同）
+
 ### 附录处理
 - 13.1 基础架构容灾等级定义：直接引用 `resources/appendix-reference.md` 中的内容
 - 附录A-D（可用性分层模型）：询问用户是否需要，如需要则引用 `resources/appendix-reference.md` 中对应内容

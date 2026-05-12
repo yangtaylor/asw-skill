@@ -159,7 +159,7 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 在编写和评审架构解决方案时，涉及的应用系统必须从《体彩系统清单》中选择，除非是新建设的应用系统。
 
 **《体彩系统清单》结构**：
-- 文件位置：`references/体彩系统清单.xlsx`（如存在）
+- 文件位置：`references/体彩系统清单.md`
 - 包含125个已建设的应用系统
 - 按蓝图位置分为以下组别：
   - 前端应用组

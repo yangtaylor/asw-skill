@@ -131,7 +131,7 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 ### 排版规范
 
 **段落间距**：
-- 正文段落：段前0, 段后120（6磅）, 行距360（单倍行距）
+- 正文段落：段前0, 段后120（6磅）, 行距360（单倍行距）, 首行缩进480DXA（2个中文字符）
 - 列表项段落：段前0, 段后60（3磅）, 行距360, 左缩进420（约2字符）, 悬挂缩进420
 
 **编号列表**：
@@ -198,8 +198,10 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
 
 3. **命名一致性**：
    - 文档中应使用系统清单中的标准名称
+   - 应用系统名称统一使用**中文简称**，不要使用英文编码指代应用系统
+   - 示例：使用"终端交易系统"而非"CSF"，使用"实体渠道管理系统"而非"PCM"
+   - 技术系统编码（英文简称）仅在接口定义、数据交换等技术细节中使用
    - 避免使用非标准简称或历史名称（原中文名称）
-   - 技术系统编码（英文简称）在涉及接口、数据交换时使用
 
 ### 子技能调用
 
@@ -235,7 +237,7 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
    - **系统交互关系图**：展示核心系统间的数据交换关系（可选，如关系复杂可单独呈现）
 
 2. **架构图内容规范**：
-   - 使用标准系统名称（来自《体彩系统清单》）
+   - 使用标准系统名称（来自《体彩系统清单》），统一使用中文简称
    - 标注系统类型：新建（绿色）、变更（黄色）、关联（灰色/蓝色）
    - 展示系统间的数据流向（单向/双向箭头）
    - 按层次划分：前端层、应用层、中台层、数据层、基础设施层等
@@ -253,26 +255,26 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
        subgraph 前端层
            A[中国体彩网]
            B[体彩APP]
-           C[传统终端 CCPOS]
+           C[传统终端]
        end
        
        subgraph 渠道与客户层
-           D[终端交易系统 CSF]
-           E[购彩者服务系统 CLS]
+           D[终端交易系统]
+           E[购彩者服务系统]
        end
        
        subgraph 发行与运营管理层
-           F[实体渠道管理系统 PCM]
-           G[销售服务系统 SOM]
+           F[实体渠道管理系统]
+           G[销售服务系统]
        end
        
        subgraph 业务中台
-           H[订单中心 ODC]
-           I[支付中心 PMC]
+           H[订单中心]
+           I[支付中心]
        end
        
        subgraph 数据中台
-           J[数据存储与加工中心 DP-DSPC]
+           J[数据存储与加工中心]
        end
        
        A --> D
@@ -313,7 +315,7 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
    - 优先使用时序图展示系统间交互，使用流程图展示业务步骤
 
 2. **图表内容规范**：
-   - 展示参与系统的标准名称（来自《体彩系统清单》）
+   - 展示参与系统的标准名称（来自《体彩系统清单》），统一使用中文简称
    - 展示系统间的调用顺序和数据流向
    - 标注关键步骤编号，与文字描述对应
    - 异常处理流程用虚线或不同颜色标注（可选）
@@ -335,10 +337,10 @@ default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times Ne
    sequenceDiagram
        participant A as 购彩者
        participant B as 体彩APP
-       participant C as 终端交易系统 CSF
-       participant D as 订单中心 ODC
-       participant E as 支付中心 PMC
-       participant F as 游戏交易系统 GTS
+       participant C as 终端交易系统
+       participant D as 订单中心
+       participant E as 支付中心
+       participant F as 竞猜型游戏交易系统
        
        A->>B: 1.选择游戏、投注内容
        B->>C: 2.提交投注请求
